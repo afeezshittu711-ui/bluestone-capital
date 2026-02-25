@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Panel</title>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { 
+      getFirestore, 
+      collection, 
+      getDocs, 
+      updateDoc, 
+      doc, 
+      getDoc 
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDmUL2bFsNdyBbTWMrnY-yaKI8hAWqLynI",
+      authDomain: "real-estate-investment-360d2.firebaseapp.com",
+      projectId: "real-estate-investment-360d2",
+      storageBucket: "real-estate-investment-360d2.firebasestorage.app",
+      messagingSenderId: "459495660687",
+      appId: "1:459495660687:web:c99b6738f0644d9c7364fa",
+      measurementId: "G-4GK8MTNT7L"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      loadDeposits();
+    });
+
+    async function loadDeposits() {
+      const snapshot = await getDocs(collection(db, "deposits"));
+      const container = document.getElementById("depositContainer");
+      container.innerHTML = "";
+
+      snapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+
+        container.innerHTML += `
+          <div style="border:1px solid black; padding:10px; margin:10px;">
+            <p>Amount: $${data.amount}</p>
+            <p>Status: ${data.status}</p>
+            <button onclick="approveDeposit('${docSnap.id}', '${data.userId}', ${data.amount})">
+              Approve
+            </button>
+          </div>
+        `;
+      });
+    }
+
+    window.approveDeposit = async function(depositId, userId, amount) {
+
+      const depositRef = doc(db, "deposits", depositId);
+      await updateDoc(depositRef, { status: "Approved" });
+
+      const userRef = doc(db, "users", userId);
+      const userSnap = await getDoc(userRef);
+
+      const currentBalance = userSnap.data().balance;
+
+      await updateDoc(userRef, {
+        balance: currentBalance + amount
+      });
+
+      alert("Deposit approved!");
+      loadDeposits();
+    };
+
+  </script>
+</head>
+<body>
+
+  <h2>Admin Panel</h2>
+  <div id="depositContainer"></div>
+
+</body>
+</html>
