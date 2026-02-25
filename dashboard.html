@@ -2,143 +2,211 @@
 <html>
 <head>
   <title>Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f9;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 500px;
+      margin: auto;
+    }
+
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    .balance {
+      font-size: 28px;
+      font-weight: bold;
+      color: #2c7a00;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      margin-bottom: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      border-radius: 6px;
+      border: none;
+      background: #111;
+      color: white;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    button:hover {
+      background: #333;
+    }
+
+    .logout {
+      background: #c10000;
+      margin-top: 10px;
+    }
+
+    .history-item {
+      padding: 8px 0;
+      border-bottom: 1px solid #eee;
+      font-size: 14px;
+    }
+
+  </style>
 </head>
+
 <body>
 
-<h1>Investment Dashboard</h1>
+<div class="container">
 
-<p>Email: <span id="userEmail"></span></p>
-<p>Balance: $<span id="balance">0</span></p>
+  <h1>Dashboard</h1>
 
-<hr>
+  <div class="card">
+    <p><strong>Email:</strong> <span id="userEmail"></span></p>
+    <p><strong>Balance:</strong></p>
+    <p class="balance">$<span id="balance">0</span></p>
+  </div>
 
-<h3>Request Deposit</h3>
-<input type="number" id="depositAmount" placeholder="Enter amount">
-<button onclick="requestDeposit()">Submit</button>
+  <div class="card">
+    <h3>Deposit</h3>
+    <input type="number" id="depositAmount" placeholder="Enter amount">
+    <button onclick="makeDeposit()">Request Deposit</button>
+  </div>
 
-<h3>Your Deposits</h3>
-<div id="depositList"></div>
+  <div class="card">
+    <h3>Withdraw</h3>
+    <input type="number" id="withdrawAmount" placeholder="Enter amount">
+    <button onclick="makeWithdraw()">Request Withdrawal</button>
+  </div>
 
-<hr>
+  <div class="card">
+    <h3>Transaction History</h3>
+    <div id="history"></div>
+  </div>
 
-<h3>Request Withdrawal</h3>
-<input type="number" id="withdrawAmount" placeholder="Enter amount">
-<button onclick="requestWithdrawal()">Withdraw</button>
+  <button class="logout" onclick="logout()">Logout</button>
 
-<h3>Your Withdrawals</h3>
-<div id="withdrawList"></div>
-
-<button onclick="logout()">Logout</button>
+</div>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, collection, addDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+  import { getFirestore, doc, getDoc, setDoc, collection, addDoc, getDocs } 
+  from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyDmUL2bFsNdyBbTWMrnY-yaKI8hAWqLynI",
-  authDomain: "real-estate-investment-360d2.firebaseapp.com",
-  projectId: "real-estate-investment-360d2",
-  storageBucket: "real-estate-investment-360d2.firebasestorage.app",
-  messagingSenderId: "459495660687",
-  appId: "1:459495660687:web:c99b6738f0644d9c7364fa"
-};
+  const firebaseConfig = {
+    apiKey: "AIzaSyDmUL2bFsNdyBbTWMrnY-yaKI8hAWqLynI",
+    authDomain: "real-estate-investment-360d2.firebaseapp.com",
+    projectId: "real-estate-investment-360d2",
+    storageBucket: "real-estate-investment-360d2.firebasestorage.app",
+    messagingSenderId: "459495660687",
+    appId: "1:459495660687:web:2595afa1e611a9757364fa",
+    measurementId: "G-9FTJ7LMDJD"
+  };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
 
-let currentUser = null;
-onAuthStateChanged(auth, async (user) => {
+  const userEmail = document.getElementById("userEmail");
+  const balanceEl = document.getElementById("balance");
+  const historyDiv = document.getElementById("history");
 
-  if (!user) {
-    window.location.href = "login.html";
-    return;
-  }
+  let currentUser;
 
-  currentUser = user;
-  document.getElementById("userEmail").innerText = user.email;
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      window.location.href = "index.html";
+      return;
+    }
 
-  const userRef = doc(db, "users", user.uid);
-  const userSnap = await getDoc(userRef);
+    currentUser = user;
+    userEmail.textContent = user.email;
 
-  if (userSnap.exists()) {
-    document.getElementById("balance").innerText = userSnap.data().balance || 0;
-  }
+    const userRef = doc(db, "users", user.email);
+    const userSnap = await getDoc(userRef);
 
-  loadDeposits();
-  loadWithdrawals();
-});
+    if (!userSnap.exists()) {
+      await setDoc(userRef, { balance: 0 });
+      balanceEl.textContent = 0;
+    } else {
+      balanceEl.textContent = userSnap.data().balance || 0;
+    }
 
-window.requestDeposit = async function () {
-  const amount = parseFloat(document.getElementById("depositAmount").value);
-
-  if (!amount || amount <= 0) {
-    alert("Enter valid amount");
-    return;
-  }
-
-  await addDoc(collection(db, "deposits"), {
-    userId: currentUser.uid,
-    amount: amount,
-    status: "pending",
-    date: new Date()
+    loadHistory();
   });
 
-  alert("Deposit request submitted");
-  document.getElementById("depositAmount").value = "";
-  loadDeposits();
-};
+  window.makeDeposit = async function() {
+    const amount = Number(document.getElementById("depositAmount").value);
+    if (!amount) return alert("Enter amount");
 
-window.requestWithdrawal = async function () {
-  const amount = parseFloat(document.getElementById("withdrawAmount").value);
+    await addDoc(collection(db, "deposits"), {
+      email: currentUser.email,
+      amount: amount,
+      status: "Pending"
+    });
 
-  if (!amount || amount <= 0) {
-    alert("Enter valid amount");
-    return;
+    alert("Deposit request sent!");
+    loadHistory();
+  };
+
+  window.makeWithdraw = async function() {
+    const amount = Number(document.getElementById("withdrawAmount").value);
+    if (!amount) return alert("Enter amount");
+
+    await addDoc(collection(db, "withdrawals"), {
+      email: currentUser.email,
+      amount: amount,
+      status: "Pending"
+    });
+
+    alert("Withdrawal request sent!");
+    loadHistory();
+  };
+
+  async function loadHistory() {
+    historyDiv.innerHTML = "";
+
+    const deposits = await getDocs(collection(db, "deposits"));
+    deposits.forEach(docSnap => {
+      const data = docSnap.data();
+      if (data.email === currentUser.email) {
+        historyDiv.innerHTML += `<div class="history-item">Deposit: $${data.amount} (${data.status})</div>`;
+      }
+    });
+
+    const withdrawals = await getDocs(collection(db, "withdrawals"));
+    withdrawals.forEach(docSnap => {
+      const data = docSnap.data();
+      if (data.email === currentUser.email) {
+        historyDiv.innerHTML += `<div class="history-item">Withdraw: $${data.amount} (${data.status})</div>`;
+      }
+    });
   }
 
-  await addDoc(collection(db, "withdrawals"), {
-    userId: currentUser.uid,
-    amount: amount,
-    status: "pending",
-    date: new Date()
-  });
-
-  alert("Withdrawal request submitted");
-  document.getElementById("withdrawAmount").value = "";
-  loadWithdrawals();
-};
-
-async function loadDeposits() {
-  const q = query(collection(db, "deposits"), where("userId", "==", currentUser.uid));
-  const snapshot = await getDocs(q);
-
-  const list = document.getElementById("depositList");
-  list.innerHTML = "";
-
-  snapshot.forEach(doc => {
-    const data = doc.data();
-    list.innerHTML += `<p>$${data.amount} - ${data.status}</p>`;
-  });
-}
-
-async function loadWithdrawals() {
-  const q = query(collection(db, "withdrawals"), where("userId", "==", currentUser.uid));
-  const snapshot = await getDocs(q);
-
-  const list = document.getElementById("withdrawList");
-  list.innerHTML = "";
-
-  snapshot.forEach(doc => {
-    const data = doc.data();
-    list.innerHTML += `<p>$${data.amount} - ${data.status}</p>`;
-  });
-}
-
-window.logout = function () {
-  signOut(auth);
-};
+  window.logout = function() {
+    signOut(auth).then(() => {
+      window.location.href = "index.html";
+    });
+  };
 
 </script>
 
