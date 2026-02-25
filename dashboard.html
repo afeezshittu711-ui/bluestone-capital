@@ -5,7 +5,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, collection, addDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDmUL2bFsNdyBbTWMrnY-yaKI8hAWqLynI",
@@ -21,8 +21,12 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
+    let currentUser;
+
     onAuthStateChanged(auth, async (user) => {
       if (user) {
+        currentUser = user;
+
         const docRef = doc(db, "users", user.uid);
         const docSnap = await getDoc(docRef);
 
@@ -30,10 +34,45 @@
           document.getElementById("name").innerText = docSnap.data().fullName;
           document.getElementById("balance").innerText = "$" + docSnap.data().balance;
         }
+
+        loadDeposits();
       } else {
         window.location.href = "login.html";
       }
     });
+
+    async function loadDeposits() {
+      const q = query(collection(db, "deposits"), where("userId", "==", currentUser.uid));
+      const querySnapshot = await getDocs(q);
+
+      const list = document.getElementById("depositList");
+      list.innerHTML = "";
+
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        list.innerHTML += `<p>$${data.amount} - ${data.status}</p>`;
+      });
+    }
+
+    window.requestDeposit = async function() {
+      const amount = document.getElementById("depositAmount").value;
+
+      if (!amount || amount <= 0) {
+        alert("Enter valid amount");
+        return;
+      }
+
+      await addDoc(collection(db, "deposits"), {
+        userId: currentUser.uid,
+        amount: Number(amount),
+        status: "Pending",
+        createdAt: new Date()
+      });
+
+      alert("Deposit request submitted!");
+      document.getElementById("depositAmount").value = "";
+      loadDeposits();
+    };
 
     window.logout = async function() {
       await signOut(auth);
@@ -48,8 +87,18 @@
   <h3>Welcome, <span id="name"></span></h3>
   <h3>Account Balance: <span id="balance"></span></h3>
 
-  <br><br>
+  <hr>
 
+  <h3>Request Deposit</h3>
+  <input type="number" id="depositAmount" placeholder="Enter amount">
+  <button onclick="requestDeposit()">Submit</button>
+
+  <hr>
+
+  <h3>Your Deposit Requests</h3>
+  <div id="depositList"></div>
+
+  <br><br>
   <button onclick="logout()">Logout</button>
 
 </body>
