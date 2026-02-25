@@ -42,8 +42,6 @@
 
   loadDeposits();
 });
-    });
-
     async function loadDeposits() {
       const querySnapshot = await getDocs(collection(db, "deposits"));
       const container = document.getElementById("depositList");
