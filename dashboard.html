@@ -5,101 +5,144 @@
 </head>
 <body>
 
-  <h1>Investment Dashboard</h1>
+<h1>Investment Dashboard</h1>
 
-  <p>Email: <span id="userEmail"></span></p>
-  <p>Balance: $<span id="balance">0</span></p>
+<p>Email: <span id="userEmail"></span></p>
+<p>Balance: $<span id="balance">0</span></p>
 
-  <hr>
+<hr>
 
-  <h3>Request Deposit</h3>
-  <input type="number" id="depositAmount" placeholder="Enter amount">
-  <button onclick="requestDeposit()">Submit</button>
+<h3>Request Deposit</h3>
+<input type="number" id="depositAmount" placeholder="Enter amount">
+<button onclick="requestDeposit()">Submit</button>
 
-  <h3>Your Deposits</h3>
-  <div id="depositList"></div>
+<h3>Your Deposits</h3>
+<div id="depositList"></div>
 
-  <br>
-  <button onclick="logout()">Logout</button>
+<hr>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import { getFirestore, doc, getDoc, collection, addDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+<h3>Request Withdrawal</h3>
+<input type="number" id="withdrawAmount" placeholder="Enter amount">
+<button onclick="requestWithdrawal()">Withdraw</button>
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyDmUL2bFsNdyBbTWMrnY-yaKI8hAWqLynI",
-      authDomain: "real-estate-investment-360d2.firebaseapp.com",
-      projectId: "real-estate-investment-360d2",
-      storageBucket: "real-estate-investment-360d2.firebasestorage.app",
-      messagingSenderId: "459495660687",
-      appId: "1:459495660687:web:c99b6738f0644d9c7364fa"
-    };
+<h3>Your Withdrawals</h3>
+<div id="withdrawList"></div>
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+<button onclick="logout()">Logout</button>
 
-    let currentUser;
+<script type="module">
 
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        window.location.href = "login.html";
-        return;
-      }
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, collection, addDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-      currentUser = user;
-      document.getElementById("userEmail").innerText = user.email;
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_AUTH_DOMAIN",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_STORAGE_BUCKET",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
 
-      const docRef = doc(db, "users", user.uid);
-      const docSnap = await getDoc(docRef);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-      if (docSnap.exists()) {
-        document.getElementById("balance").innerText = docSnap.data().balance || 0;
-      }
+let currentUser = null;
 
-      loadDeposits();
-      loadWithdrawals();
-    });
+onAuthStateChanged(auth, async (user) => {
 
-    async function loadDeposits() {
-      const q = query(collection(db, "deposits"), where("userId", "==", currentUser.uid));
-      const querySnapshot = await getDocs(q);
+  if (!user) {
+    window.location.href = "login.html";
+    return;
+  }
 
-      const list = document.getElementById("depositList");
-      list.innerHTML = "";
+  currentUser = user;
+  document.getElementById("userEmail").innerText = user.email;
 
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        list.innerHTML += `<p>$${data.amount} - ${data.status}</p>`;
-      });
-    }
+  const userRef = doc(db, "users", user.uid);
+  const userSnap = await getDoc(userRef);
 
-    window.requestDeposit = async function() {
-      const amount = document.getElementById("depositAmount").value;
+  if (userSnap.exists()) {
+    document.getElementById("balance").innerText = userSnap.data().balance || 0;
+  }
 
-      if (!amount || amount <= 0) {
-        alert("Enter valid amount");
-        return;
-      }
+  loadDeposits();
+  loadWithdrawals();
+});
 
-      await addDoc(collection(db, "deposits"), {
-        userId: currentUser.uid,
-        amount: Number(amount),
-        status: "Pending",
-        createdAt: new Date()
-      });
+window.requestDeposit = async function () {
+  const amount = parseFloat(document.getElementById("depositAmount").value);
 
-      alert("Deposit request submitted!");
-      document.getElementById("depositAmount").value = "";
-      loadDeposits();
-    };
+  if (!amount || amount <= 0) {
+    alert("Enter valid amount");
+    return;
+  }
 
-    window.logout = async function() {
-      await signOut(auth);
-      window.location.href = "login.html";
-    };
-  </script>
+  await addDoc(collection(db, "deposits"), {
+    userId: currentUser.uid,
+    amount: amount,
+    status: "pending",
+    date: new Date()
+  });
+
+  alert("Deposit request submitted");
+  document.getElementById("depositAmount").value = "";
+  loadDeposits();
+};
+
+window.requestWithdrawal = async function () {
+  const amount = parseFloat(document.getElementById("withdrawAmount").value);
+
+  if (!amount || amount <= 0) {
+    alert("Enter valid amount");
+    return;
+  }
+
+  await addDoc(collection(db, "withdrawals"), {
+    userId: currentUser.uid,
+    amount: amount,
+    status: "pending",
+    date: new Date()
+  });
+
+  alert("Withdrawal request submitted");
+  document.getElementById("withdrawAmount").value = "";
+  loadWithdrawals();
+};
+
+async function loadDeposits() {
+  const q = query(collection(db, "deposits"), where("userId", "==", currentUser.uid));
+  const snapshot = await getDocs(q);
+
+  const list = document.getElementById("depositList");
+  list.innerHTML = "";
+
+  snapshot.forEach(doc => {
+    const data = doc.data();
+    list.innerHTML += `<p>$${data.amount} - ${data.status}</p>`;
+  });
+}
+
+async function loadWithdrawals() {
+  const q = query(collection(db, "withdrawals"), where("userId", "==", currentUser.uid));
+  const snapshot = await getDocs(q);
+
+  const list = document.getElementById("withdrawList");
+  list.innerHTML = "";
+
+  snapshot.forEach(doc => {
+    const data = doc.data();
+    list.innerHTML += `<p>$${data.amount} - ${data.status}</p>`;
+  });
+}
+
+window.logout = function () {
+  signOut(auth);
+};
+
+</script>
 
 </body>
 </html>
