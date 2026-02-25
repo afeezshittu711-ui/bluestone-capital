@@ -88,7 +88,6 @@
       color: #aaa;
       margin-bottom: 10px;
     }
-
   </style>
 </head>
 
@@ -101,7 +100,7 @@
   <div class="card">
     <div class="section-title">ACCOUNT</div>
     <div>Email: <span id="userEmail"></span></div>
-    <div class="balance">$<span id="balance">0</span></div>
+    <div class="balance">$<span id="balance">0.00</span></div>
   </div>
 
   <div class="card">
@@ -151,6 +150,22 @@
 
   let currentUser;
 
+  function animateBalance(target) {
+    let start = 0;
+    const duration = 1000;
+    const increment = target / (duration / 16);
+
+    const counter = setInterval(() => {
+      start += increment;
+      if (start >= target) {
+        balanceEl.textContent = target.toFixed(2);
+        clearInterval(counter);
+      } else {
+        balanceEl.textContent = start.toFixed(2);
+      }
+    }, 16);
+  }
+
   onAuthStateChanged(auth, async (user) => {
     if (!user) {
       window.location.href = "index.html";
@@ -165,9 +180,10 @@
 
     if (!userSnap.exists()) {
       await setDoc(userRef, { balance: 0 });
-      balanceEl.textContent = 0;
+      animateBalance(0);
     } else {
-      balanceEl.textContent = userSnap.data().balance || 0;
+      const realBalance = userSnap.data().balance || 0;
+      animateBalance(realBalance);
     }
 
     loadHistory();
