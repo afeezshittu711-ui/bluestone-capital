@@ -2,22 +2,85 @@
 <html>
 <head>
   <title>Admin Panel</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f9;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #111;
+    }
+
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+      margin-bottom: 30px;
+    }
+
+    .request {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    .request:last-child {
+      border-bottom: none;
+    }
+
+    button {
+      background: #111;
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    button:hover {
+      background: #333;
+    }
+
+    .amount {
+      font-weight: bold;
+      color: #2c7a00;
+    }
+
+    .withdraw {
+      color: #c10000;
+    }
+  </style>
 </head>
+
 <body>
+
   <h1>Admin Dashboard</h1>
 
-  <h2>Deposit Requests</h2>
-  <div id="depositRequests"></div>
+  <div class="card">
+    <h2>Deposit Requests</h2>
+    <div id="depositRequests"></div>
+  </div>
 
-  <h2>Withdrawal Requests</h2>
-  <div id="withdrawalRequests"></div>
+  <div class="card">
+    <h2>Withdrawal Requests</h2>
+    <div id="withdrawalRequests"></div>
+  </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getFirestore, collection, getDocs, updateDoc, doc, getDoc } 
     from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    // ✅ YOUR REAL FIREBASE CONFIG (ALREADY INSERTED)
     const firebaseConfig = {
       apiKey: "AIzaSyDmUL2bFsNdyBbTWMrnY-yaKI8hAWqLynI",
       authDomain: "real-estate-investment-360d2.firebaseapp.com",
@@ -43,12 +106,12 @@
 
         if (data.status === "Pending") {
           depositDiv.innerHTML += `
-            <p>
-              ${data.email} - $${data.amount}
+            <div class="request">
+              <span>${data.email} - <span class="amount">$${data.amount}</span></span>
               <button onclick="approveDeposit('${docSnap.id}', '${data.email}', ${data.amount})">
                 Approve
               </button>
-            </p>
+            </div>
           `;
         }
       });
@@ -63,12 +126,12 @@
 
         if (data.status === "Pending") {
           withdrawalDiv.innerHTML += `
-            <p>
-              ${data.email} - $${data.amount}
+            <div class="request">
+              <span>${data.email} - <span class="amount withdraw">$${data.amount}</span></span>
               <button onclick="approveWithdrawal('${docSnap.id}', '${data.email}', ${data.amount})">
                 Approve
               </button>
-            </p>
+            </div>
           `;
         }
       });
@@ -115,5 +178,6 @@
     loadDeposits();
     loadWithdrawals();
   </script>
+
 </body>
 </html>
