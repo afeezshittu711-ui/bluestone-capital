@@ -1,34 +1,56 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Dashboard - BlueStone Capital</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<style>
-body { background:#0f172a; color:white; font-family:Arial; padding:20px; }
-.card { background:#1e293b; padding:20px; border-radius:10px; margin-bottom:20px; }
-button { padding:10px 15px; background:#22c55e; border:none; border-radius:6px; font-weight:bold; }
-</style>
+  <title>Dashboard</title>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDmUL2bFsNdyBbTWMrnY-yaKI8hAWqLynI",
+      authDomain: "real-estate-investment-360d2.firebaseapp.com",
+      projectId: "real-estate-investment-360d2",
+      storageBucket: "real-estate-investment-360d2.firebasestorage.app",
+      messagingSenderId: "459495660687",
+      appId: "1:459495660687:web:c99b6738f0644d9c7364fa",
+      measurementId: "G-4GK8MTNT7L"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const docRef = doc(db, "users", user.uid);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+          document.getElementById("name").innerText = docSnap.data().fullName;
+          document.getElementById("balance").innerText = "$" + docSnap.data().balance;
+        }
+      } else {
+        window.location.href = "login.html";
+      }
+    });
+
+    window.logout = async function() {
+      await signOut(auth);
+      window.location.href = "login.html";
+    };
+  </script>
 </head>
 <body>
 
-<h1>Investor Dashboard</h1>
+  <h2>Investment Dashboard</h2>
 
-<div class="card">
-<h3>Total Invested</h3>
-<p>$10,400</p>
-</div>
+  <h3>Welcome, <span id="name"></span></h3>
+  <h3>Account Balance: <span id="balance"></span></h3>
 
-<div class="card">
-<h3>Projected Annual Return (22%)</h3>
-<p>$12,688</p>
-</div>
+  <br><br>
 
-<div class="card">
-<h3>Withdrawal Option</h3>
-<button>Request Withdrawal</button>
-</div>
-
-<button onclick="window.location.href='index.html'">Logout</button>
+  <button onclick="logout()">Logout</button>
 
 </body>
 </html>
