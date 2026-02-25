@@ -2,17 +2,17 @@
 <html>
 <head>
   <title>Admin Panel</title>
+</head>
+<body>
+
+  <h1>Admin Deposit Approval</h1>
+
+  <div id="depositList"></div>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import { 
-      getFirestore, 
-      collection, 
-      getDocs, 
-      updateDoc, 
-      doc, 
-      getDoc 
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDmUL2bFsNdyBbTWMrnY-yaKI8hAWqLynI",
@@ -20,8 +20,7 @@
       projectId: "real-estate-investment-360d2",
       storageBucket: "real-estate-investment-360d2.firebasestorage.app",
       messagingSenderId: "459495660687",
-      appId: "1:459495660687:web:c99b6738f0644d9c7364fa",
-      measurementId: "G-4GK8MTNT7L"
+      appId: "1:459495660687:web:c99b6738f0644d9c7364fa"
     };
 
     const app = initializeApp(firebaseConfig);
@@ -29,36 +28,28 @@
     const db = getFirestore(app);
 
     onAuthStateChanged(auth, async (user) => {
-  if (!user) {
-    window.location.href = "login.html";
-    return;
-  }
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
 
-  // 🔒 Replace this email with YOUR admin email
-  if (user.email !== "lovelovers250@gmail.com") {
-    alert("Access denied");
-    window.location.href = "dashboard.html";
-    return;
-  }
-
-  loadDeposits();
-});
+      loadDeposits();
+    });
 
     async function loadDeposits() {
-      const snapshot = await getDocs(collection(db, "deposits"));
-      const container = document.getElementById("depositContainer");
+      const querySnapshot = await getDocs(collection(db, "deposits"));
+      const container = document.getElementById("depositList");
       container.innerHTML = "";
 
-      snapshot.forEach((docSnap) => {
-        const data = docSnap.data();
+      querySnapshot.forEach((depositDoc) => {
+        const data = depositDoc.data();
 
         container.innerHTML += `
-          <div style="border:1px solid black; padding:10px; margin:10px;">
+          <div style="border:1px solid black; margin:10px; padding:10px;">
+            <p>User ID: ${data.userId}</p>
             <p>Amount: $${data.amount}</p>
             <p>Status: ${data.status}</p>
-            <button onclick="approveDeposit('${docSnap.id}', '${data.userId}', ${data.amount})">
-              Approve
-            </button>
+            ${data.status === "Pending" ? `<button onclick="approveDeposit('${depositDoc.id}', '${data.userId}', ${data.amount})">Approve</button>` : ""}
           </div>
         `;
       });
@@ -66,28 +57,28 @@
 
     window.approveDeposit = async function(depositId, userId, amount) {
 
+      // 1️⃣ Update deposit status
       const depositRef = doc(db, "deposits", depositId);
-      await updateDoc(depositRef, { status: "Approved" });
+      await updateDoc(depositRef, {
+        status: "Approved"
+      });
 
+      // 2️⃣ Increase user balance
       const userRef = doc(db, "users", userId);
       const userSnap = await getDoc(userRef);
 
-      const currentBalance = userSnap.data().balance;
+      if (userSnap.exists()) {
+        const currentBalance = userSnap.data().balance || 0;
 
-      await updateDoc(userRef, {
-        balance: currentBalance + amount
-      });
+        await updateDoc(userRef, {
+          balance: currentBalance + amount
+        });
+      }
 
-      alert("Deposit approved!");
+      alert("Deposit Approved & Balance Updated!");
       loadDeposits();
     };
-
   </script>
-</head>
-<body>
-
-  <h2>Admin Panel</h2>
-  <div id="depositContainer"></div>
 
 </body>
 </html>
