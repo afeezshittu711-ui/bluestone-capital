@@ -1,73 +1,92 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Dashboard</title>
+  <title>Real Estate Investment</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #f4f6f9;
       margin: 0;
-      padding: 20px;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #0f0f0f, #1c1c1c);
+      color: white;
     }
 
     .container {
       max-width: 500px;
       margin: auto;
-    }
-
-    .card {
-      background: white;
       padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-      margin-bottom: 20px;
     }
 
     h1 {
       text-align: center;
+      font-weight: 600;
+      margin-bottom: 30px;
+    }
+
+    .card {
+      background: rgba(255,255,255,0.05);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.4);
     }
 
     .balance {
-      font-size: 28px;
+      font-size: 36px;
       font-weight: bold;
-      color: #2c7a00;
+      color: #00ff88;
+      margin-top: 10px;
     }
 
     input {
       width: 100%;
-      padding: 10px;
+      padding: 12px;
+      border-radius: 10px;
+      border: none;
       margin-top: 10px;
       margin-bottom: 10px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
+      background: #2a2a2a;
+      color: white;
+    }
+
+    input::placeholder {
+      color: #aaa;
     }
 
     button {
       width: 100%;
-      padding: 10px;
-      border-radius: 6px;
+      padding: 12px;
+      border-radius: 10px;
       border: none;
-      background: #111;
-      color: white;
+      background: linear-gradient(90deg, #00ff88, #00c853);
+      color: black;
+      font-weight: bold;
       cursor: pointer;
-      transition: 0.2s;
+      transition: 0.2s ease;
     }
 
     button:hover {
-      background: #333;
+      transform: scale(1.03);
     }
 
     .logout {
-      background: #c10000;
-      margin-top: 10px;
+      background: linear-gradient(90deg, #ff3b3b, #b00020);
+      color: white;
+      margin-top: 20px;
     }
 
     .history-item {
       padding: 8px 0;
-      border-bottom: 1px solid #eee;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
       font-size: 14px;
+    }
+
+    .section-title {
+      font-size: 14px;
+      color: #aaa;
+      margin-bottom: 10px;
     }
 
   </style>
@@ -77,28 +96,28 @@
 
 <div class="container">
 
-  <h1>Dashboard</h1>
+  <h1>Real Estate Investment</h1>
 
   <div class="card">
-    <p><strong>Email:</strong> <span id="userEmail"></span></p>
-    <p><strong>Balance:</strong></p>
-    <p class="balance">$<span id="balance">0</span></p>
+    <div class="section-title">ACCOUNT</div>
+    <div>Email: <span id="userEmail"></span></div>
+    <div class="balance">$<span id="balance">0</span></div>
   </div>
 
   <div class="card">
-    <h3>Deposit</h3>
+    <div class="section-title">DEPOSIT</div>
     <input type="number" id="depositAmount" placeholder="Enter amount">
     <button onclick="makeDeposit()">Request Deposit</button>
   </div>
 
   <div class="card">
-    <h3>Withdraw</h3>
+    <div class="section-title">WITHDRAW</div>
     <input type="number" id="withdrawAmount" placeholder="Enter amount">
     <button onclick="makeWithdraw()">Request Withdrawal</button>
   </div>
 
   <div class="card">
-    <h3>Transaction History</h3>
+    <div class="section-title">TRANSACTIONS</div>
     <div id="history"></div>
   </div>
 
