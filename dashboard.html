@@ -36,6 +36,24 @@
       box-shadow: 0 4px 10px rgba(0,0,0,0.05);
     }
 
+    .transaction-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid #eee;
+      font-size: 14px;
+    }
+
+    .deposit {
+      color: #10b981;
+      font-weight: bold;
+    }
+
+    .withdrawal {
+      color: #ef4444;
+      font-weight: bold;
+    }
+
     button {
       padding: 10px 20px;
       border: none;
@@ -83,10 +101,12 @@
 
   <div class="card">
     <h2>Transactions</h2>
-    <p>No recent transactions</p>
+    <div id="transactionsList">
+      <p>No recent transactions</p>
+    </div>
   </div>
 
-  <!-- ✅ Deposit & Withdraw Section (ADDED, nothing removed) -->
+  <!-- Quick Actions -->
   <div class="card">
     <h2>Quick Actions</h2>
     <button class="deposit-btn" onclick="window.location.href='deposit.html'">
@@ -100,10 +120,17 @@
 
 </div>
 
-<!-- Firebase Auth Protection -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { 
+    getFirestore, 
+    collection, 
+    query, 
+    where, 
+    orderBy, 
+    onSnapshot 
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyDmUL2bFsNdyBbTWMrnY-yaKI8hAWqLynI",
@@ -117,11 +144,52 @@
 
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  const transactionsList = document.getElementById("transactionsList");
 
   onAuthStateChanged(auth, (user) => {
     if (!user) {
       window.location.href = "login.html";
+      return;
     }
+
+    // 🔥 Real-time transactions listener
+    const q = query(
+      collection(db, "transactions"),
+      where("uid", "==", user.uid),
+      orderBy("createdAt", "desc")
+    );
+
+    onSnapshot(q, (snapshot) => {
+      if (snapshot.empty) {
+        transactionsList.innerHTML = "<p>No recent transactions</p>";
+        return;
+      }
+
+      transactionsList.innerHTML = "";
+
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+
+        const div = document.createElement("div");
+        div.classList.add("transaction-item");
+
+        const typeClass = data.type === "Deposit" ? "deposit" : "withdrawal";
+
+        div.innerHTML = `
+          <div>
+            <strong>${data.type}</strong><br>
+            <small>${data.status}</small>
+          </div>
+          <div class="${typeClass}">
+            $${data.amount}
+          </div>
+        `;
+
+        transactionsList.appendChild(div);
+      });
+    });
   });
 
   window.logout = function () {
