@@ -3,337 +3,301 @@
 <head>
   <title>Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Inter', sans-serif;
-      /* === FINTECH POLISH ADDITIONS (SAFE) === */
-
-/* Smooth transitions */
-button, .stat-card, .transaction-item, .balance-card {
-  transition: all 0.25s ease;
-}
-
-/* Hover lift effect */
-.stat-card:hover,
-.transactions-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 25px rgba(0,0,0,0.25);
-}
-
-/* Button micro interaction */
-.deposit-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 18px rgba(16,185,129,0.4);
-}
-
-.withdraw-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 18px rgba(239,68,68,0.4);
-}
-
-.logout-btn:hover {
-  opacity: 0.85;
-}
-
-/* Glass style upgrade */
-.stat-card,
-.transactions-card {
-  backdrop-filter: blur(8px);
-  background: rgba(30,41,59,0.85);
-}
-
-/* Transaction hover highlight */
-.transaction-item:hover {
-  background: rgba(255,255,255,0.04);
-  padding-left: 6px;
-  border-radius: 6px;
-}
-
-/* Balance animation */
-.balance-card {
-  animation: fadeSlide 0.6s ease forwards;
-}
-
-@keyframes fadeSlide {
-  from {
-    opacity: 0;
-    transform: translateY(15px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-    }
-
     body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
       background: #0f172a;
-      color: #fff;
+      color: white;
     }
 
-    header {
-      padding: 20px;
+    .container {
+      padding: 30px;
+    }
+
+    .header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: linear-gradient(135deg, #1e293b, #0f172a);
     }
 
-    header h1 {
-      font-size: 20px;
-      font-weight: 600;
+    .balance-card {
+      background: linear-gradient(135deg, #1e293b, #0f172a);
+      padding: 25px;
+      border-radius: 16px;
+      margin-top: 20px;
+      box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+    }
+
+    .balance-card h2 {
+      margin: 0;
+      font-size: 28px;
+    }
+
+    .investment-wrapper {
+      margin-top: 40px;
+    }
+
+    .investment-card {
+      background: linear-gradient(135deg, #1e293b, #0f172a);
+      padding: 30px;
+      border-radius: 18px;
+      max-width: 500px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    }
+
+    .plan-badge {
+      background: #10b981;
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 30px;
+      font-size: 12px;
+      margin-bottom: 20px;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      border: none;
+      margin-top: 5px;
+      margin-bottom: 20px;
+      font-size: 15px;
+    }
+
+    .investment-summary {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      background: #2563eb;
+      color: white;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .active-investment {
+      margin-top: 25px;
+      background: rgba(255,255,255,0.05);
+      padding: 15px;
+      border-radius: 12px;
     }
 
     .logout-btn {
       background: #ef4444;
-      border: none;
+      width: auto;
       padding: 8px 14px;
-      border-radius: 6px;
-      color: white;
-      cursor: pointer;
-      font-size: 14px;
-    }
-
-    .container {
-      padding: 20px;
-    }
-
-    .balance-card {
-      background: linear-gradient(135deg, #2563eb, #1d4ed8);
-      padding: 25px;
-      border-radius: 16px;
-      margin-bottom: 25px;
-    }
-
-    .balance-card h2 {
-      font-size: 14px;
-      opacity: 0.8;
-      margin-bottom: 10px;
-    }
-
-    .balance-card .amount {
-      font-size: 32px;
-      font-weight: 700;
-    }
-
-    .stats {
-      display: flex;
-      gap: 15px;
-      margin-bottom: 25px;
-    }
-
-    .stat-card {
-      flex: 1;
-      background: #1e293b;
-      padding: 18px;
-      border-radius: 12px;
-    }
-
-    .stat-card h3 {
-      font-size: 13px;
-      opacity: 0.7;
-      margin-bottom: 8px;
-    }
-
-    .stat-card p {
-      font-size: 18px;
-      font-weight: 600;
-    }
-
-    .actions {
-      display: flex;
-      gap: 15px;
-      margin-bottom: 30px;
-    }
-
-    .deposit-btn, .withdraw-btn {
-      flex: 1;
-      padding: 14px;
-      border: none;
-      border-radius: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      font-size: 15px;
-    }
-
-    .deposit-btn {
-      background: #10b981;
-      color: white;
-    }
-
-    .withdraw-btn {
-      background: #ef4444;
-      color: white;
-    }
-
-    .transactions-card {
-      background: #1e293b;
-      border-radius: 16px;
-      padding: 20px;
-    }
-
-    .transactions-card h2 {
-      margin-bottom: 15px;
-      font-size: 16px;
-    }
-
-    .transaction-item {
-      display: flex;
-      justify-content: space-between;
-      padding: 12px 0;
-      border-bottom: 1px solid #334155;
-      font-size: 14px;
-    }
-
-    .transaction-item:last-child {
-      border-bottom: none;
-    }
-
-    .deposit {
-      color: #10b981;
-      font-weight: 600;
-    }
-
-    .withdrawal {
-      color: #ef4444;
-      font-weight: 600;
-    }
-
-    @media(max-width: 600px) {
-      .stats {
-        flex-direction: column;
-      }
-
-      .actions {
-        flex-direction: column;
-      }
     }
   </style>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDmUL2bFsNdyBbTWMrnY-yaKI8hAWqLynI",
+      authDomain: "real-estate-investment-360d2.firebaseapp.com",
+      projectId: "real-estate-investment-360d2",
+      storageBucket: "real-estate-investment-360d2.firebasestorage.app",
+      messagingSenderId: "459495660687",
+      appId: "1:459495660687:web:c99b6738f0644d9c7364fa",
+      measurementId: "G-4GK8MTNT7L"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const ROI_PERCENT = 0.5;
+    const DURATION_MONTHS = 3;
+
+    let currentUser = null;
+    let currentInvestment = null;
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "login.html";
+      } else {
+        currentUser = user;
+        loadUserData();
+        loadInvestment();
+      }
+    });
+
+    async function loadUserData() {
+      const userRef = doc(db, "users", currentUser.uid);
+      const snap = await getDoc(userRef);
+      if (snap.exists()) {
+        document.getElementById("balance").innerText =
+          "$" + (snap.data().balance || 0).toLocaleString();
+      }
+    }
+
+    async function loadInvestment() {
+      const invRef = doc(db, "investments", currentUser.uid);
+      const snap = await getDoc(invRef);
+      if (snap.exists()) {
+        currentInvestment = snap.data();
+        showActiveInvestment(currentInvestment);
+      }
+    }
+
+    window.calculateReturn = function () {
+      const amount = parseFloat(document.getElementById("depositAmount").value) || 0;
+      const total = amount + (amount * ROI_PERCENT);
+      document.getElementById("projectedReturn").innerText =
+        "$" + total.toLocaleString();
+    };
+
+    window.startInvestment = async function () {
+      const amount = parseFloat(document.getElementById("depositAmount").value);
+      if (!amount || amount < 1000) {
+        alert("Minimum investment is $1,000");
+        return;
+      }
+
+      const maturityDate = new Date();
+      maturityDate.setMonth(maturityDate.getMonth() + DURATION_MONTHS);
+
+      const totalReturn = amount + (amount * ROI_PERCENT);
+
+      await setDoc(doc(db, "investments", currentUser.uid), {
+        amount,
+        totalReturn,
+        startDate: new Date(),
+        maturityDate,
+        claimed: false
+      }, { merge: true });
+
+      currentInvestment = {
+        amount,
+        totalReturn,
+        maturityDate,
+        claimed: false
+      };
+
+      showActiveInvestment(currentInvestment);
+    };
+
+    function showActiveInvestment(data) {
+      document.getElementById("activeInvestment").style.display = "block";
+      document.getElementById("activeAmount").innerText =
+        "$" + data.amount.toLocaleString();
+
+      const maturity = new Date(data.maturityDate);
+      const claimBtn = document.getElementById("claimBtn");
+
+      const interval = setInterval(() => {
+        const now = new Date();
+        const diff = maturity - now;
+
+        if (diff <= 0 && !data.claimed) {
+          document.getElementById("countdown").innerText = "Matured";
+          claimBtn.disabled = false;
+          clearInterval(interval);
+        } else if (!data.claimed) {
+          const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+          document.getElementById("countdown").innerText = days + " days remaining";
+        } else {
+          document.getElementById("countdown").innerText = "Completed";
+          claimBtn.disabled = true;
+        }
+      }, 1000);
+    }
+
+    window.claimInvestment = async function () {
+      if (!currentInvestment || currentInvestment.claimed) return;
+
+      const userRef = doc(db, "users", currentUser.uid);
+      const userSnap = await getDoc(userRef);
+      const currentBalance = userSnap.data().balance || 0;
+
+      const newBalance = currentBalance + currentInvestment.totalReturn;
+
+      await updateDoc(userRef, {
+        balance: newBalance
+      });
+
+      await updateDoc(doc(db, "investments", currentUser.uid), {
+        claimed: true
+      });
+
+      alert("Investment claimed successfully!");
+
+      loadUserData();
+      loadInvestment();
+    };
+
+    window.logout = function () {
+      signOut(auth);
+    };
+  </script>
 </head>
 
 <body>
 
-<header>
-  <h1>Fintech Dashboard</h1>
-  <button class="logout-btn" onclick="logout()">Logout</button>
-</header>
+  <div class="container">
 
-<div class="container">
-
-  <div class="balance-card">
-    <h2>Available Balance</h2>
-    <div class="amount">$10,000</div>
-  </div>
-
-  <div class="stats">
-    <div class="stat-card">
-      <h3>Portfolio Growth</h3>
-      <p>+12% this month</p>
+    <div class="header">
+      <h1>Dashboard</h1>
+      <button class="logout-btn" onclick="logout()">Logout</button>
     </div>
-    <div class="stat-card">
-      <h3>Total Transactions</h3>
-      <p id="transactionCount">0</p>
+
+    <div class="balance-card">
+      <p>Available Balance</p>
+      <h2 id="balance">$0</h2>
     </div>
-  </div>
 
-  <div class="actions">
-    <button class="deposit-btn" onclick="window.location.href='deposit.html'">
-      Deposit Funds
-    </button>
-    <button class="withdraw-btn" onclick="window.location.href='withdraw.html'">
-      Withdraw Funds
-    </button>
-  </div>
+    <div class="investment-wrapper">
+      <div class="investment-card">
 
-  <div class="transactions-card">
-    <h2>Recent Transactions</h2>
-    <div id="transactionsList">
-      <p style="opacity:0.6;">No recent transactions</p>
-    </div>
-  </div>
+        <div class="plan-badge">Premium 3-Month Growth Plan</div>
 
-</div>
+        <label>Deposit Amount ($)</label>
+        <input type="number" id="depositAmount"
+          placeholder="Minimum $1,000"
+          oninput="calculateReturn()">
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-  import { getFirestore, collection, query, where, orderBy, onSnapshot } 
-  from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-  // ✅ YOUR ORIGINAL WORKING CONFIG RESTORED
-  const firebaseConfig = {
-    apiKey: "AIzaSyDmUL2bFsNdyBbTWMrnY-yaKI8hAWqLynI",
-    authDomain: "real-estate-investment-360d2.firebaseapp.com",
-    projectId: "real-estate-investment-360d2",
-    storageBucket: "real-estate-investment-360d2.firebasestorage.app",
-    messagingSenderId: "459495660687",
-    appId: "1:459495660687:web:2595afa1e611a9757364fa",
-    measurementId: "G-9FTJ7LMDJD"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
-
-  const transactionsList = document.getElementById("transactionsList");
-  const transactionCount = document.getElementById("transactionCount");
-
-  onAuthStateChanged(auth, (user) => {
-    if (!user) {
-      window.location.href = "login.html";
-      return;
-    }
-
-    const q = query(
-      collection(db, "transactions"),
-      where("uid", "==", user.uid),
-      orderBy("createdAt", "desc")
-    );
-
-    onSnapshot(q, (snapshot) => {
-      transactionCount.textContent = snapshot.size;
-
-      if (snapshot.empty) {
-        transactionsList.innerHTML = "<p style='opacity:0.6;'>No recent transactions</p>";
-        return;
-      }
-
-      transactionsList.innerHTML = "";
-
-      snapshot.forEach((doc) => {
-        const data = doc.data();
-        const div = document.createElement("div");
-        div.classList.add("transaction-item");
-
-        const typeClass = data.type === "Deposit" ? "deposit" : "withdrawal";
-
-        div.innerHTML = `
+        <div class="investment-summary">
           <div>
-            <strong>${data.type}</strong><br>
-            <small>${data.status}</small>
+            <span>Duration</span>
+            <strong>3 Months</strong>
           </div>
-          <div class="${typeClass}">
-            $${data.amount}
+          <div>
+            <span>Claim After 3 Months</span>
+            <strong id="projectedReturn">$0</strong>
           </div>
-        `;
+        </div>
 
-        transactionsList.appendChild(div);
-      });
-    });
-  });
+        <button onclick="startInvestment()">Invest Now</button>
 
-  window.logout = function () {
-    signOut(auth).then(() => {
-      window.location.href = "login.html";
-    });
-  };
-</script>
+        <div id="activeInvestment" class="active-investment" style="display:none;">
+          <h4>Active Investment</h4>
+          <p>Invested: <strong id="activeAmount"></strong></p>
+          <p>Maturity Status: <strong id="countdown"></strong></p>
+
+          <button id="claimBtn" disabled onclick="claimInvestment()">
+            Claim Funds
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
 
 </body>
 </html>
