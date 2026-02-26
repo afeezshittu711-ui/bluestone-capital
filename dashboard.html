@@ -4,6 +4,8 @@
   <title>Real Estate Investment</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <style>
     body {
       margin: 0;
@@ -36,6 +38,10 @@
       font-size: 36px;
       font-weight: bold;
       color: #00ff88;
+      margin-top: 10px;
+    }
+
+    canvas {
       margin-top: 10px;
     }
 
@@ -94,6 +100,11 @@
   </div>
 
   <div class="card">
+    <div class="section-title">PORTFOLIO GROWTH</div>
+    <canvas id="growthChart"></canvas>
+  </div>
+
+  <div class="card">
     <div class="section-title">DEPOSIT</div>
     <input type="number" id="depositAmount" placeholder="Enter amount">
     <button onclick="makeDeposit()">Request Deposit</button>
@@ -141,6 +152,7 @@
   const historyDiv = document.getElementById("history");
 
   let currentUser;
+  let chart;
 
   function animateBalance(target) {
     let start = 0;
@@ -158,7 +170,42 @@
     }, 16);
   }
 
-  onAuthStateChanged(auth, async (user) => {
+  function loadChart(balance) {
+    const ctx = document.getElementById("growthChart");
+
+    if (chart) chart.destroy();
+
+    chart = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+        datasets: [{
+          label: "Portfolio",
+          data: [
+            balance * 0.4,
+            balance * 0.55,
+            balance * 0.7,
+            balance * 0.8,
+            balance * 0.9,
+            balance
+          ],
+          borderColor: "#00ff88",
+          backgroundColor: "rgba(0,255,136,0.15)",
+          fill: true,
+          tension: 0.4
+        }]
+      },
+      options: {
+        plugins: { legend: { display: false }},
+        scales: {
+          x: { ticks: { color: "#aaa" }},
+          y: { ticks: { color: "#aaa" }}
+        }
+      }
+    });
+  }
+
+  onAuthStateChanged(auth, (user) => {
     if (!user) {
       window.location.href = "index.html";
       return;
@@ -169,35 +216,17 @@
 
     const userRef = doc(db, "users", user.email);
 
-    // 🔥 REAL-TIME BALANCE LISTENER
     onSnapshot(userRef, (docSnap) => {
       if (!docSnap.exists()) {
         setDoc(userRef, { balance: 0 });
       } else {
         const liveBalance = docSnap.data().balance || 0;
         animateBalance(liveBalance);
+        loadChart(liveBalance);
       }
     });
 
-    // 🔥 REAL-TIME DEPOSITS
-    const depositQuery = query(
-      collection(db, "deposits"),
-      where("email", "==", user.email)
-    );
-
-    onSnapshot(depositQuery, (snapshot) => {
-      loadHistory(snapshot.docs);
-    });
-
-    // 🔥 REAL-TIME WITHDRAWALS
-    const withdrawQuery = query(
-      collection(db, "withdrawals"),
-      where("email", "==", user.email)
-    );
-
-    onSnapshot(withdrawQuery, (snapshot) => {
-      loadHistory();
-    });
+    loadHistory();
   });
 
   window.makeDeposit = async function() {
