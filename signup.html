@@ -2,6 +2,10 @@
 <html>
 <head>
   <title>Create Account</title>
+
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -30,7 +34,6 @@
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
-        // Save user info in Firestore
         await setDoc(doc(db, "users", user.uid), {
           fullName: fullName,
           email: email,
@@ -46,16 +49,204 @@
       }
     }
   </script>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', sans-serif;
+    }
+
+    body {
+      height: 100vh;
+      background: linear-gradient(-45deg, #0f172a, #1e293b, #0f172a);
+      background-size: 400% 400%;
+      animation: gradientMove 12s ease infinite;
+    }
+
+    @keyframes gradientMove {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .signup-wrapper {
+      display: flex;
+      height: 100vh;
+    }
+
+    /* LEFT PANEL */
+    .signup-left {
+      flex: 1;
+      color: white;
+      padding: 60px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .brand h1 {
+      font-size: 42px;
+      margin-bottom: 10px;
+    }
+
+    .brand p {
+      opacity: 0.8;
+      margin-bottom: 40px;
+    }
+
+    .features div {
+      margin-bottom: 15px;
+      font-size: 15px;
+      opacity: 0.85;
+    }
+
+    /* RIGHT PANEL */
+    .signup-right {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .signup-card {
+      width: 380px;
+      padding: 40px;
+      background: rgba(30,41,59,0.85);
+      backdrop-filter: blur(14px);
+      border-radius: 18px;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.4);
+      animation: fadeUp 0.6s ease forwards;
+    }
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(25px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .signup-card h2 {
+      color: white;
+      margin-bottom: 30px;
+      text-align: center;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 18px;
+      border-radius: 8px;
+      border: none;
+      background: #0f172a;
+      color: white;
+      font-size: 14px;
+    }
+
+    input::placeholder {
+      color: #94a3b8;
+    }
+
+    .password-wrapper {
+      position: relative;
+    }
+
+    .password-wrapper span {
+      position: absolute;
+      right: 12px;
+      top: 12px;
+      cursor: pointer;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: none;
+      background: #10b981;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.3s ease;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(16,185,129,0.4);
+    }
+
+    .footer-text {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 12px;
+      opacity: 0.6;
+      color: #cbd5e1;
+    }
+
+    @media(max-width: 900px) {
+      .signup-left {
+        display: none;
+      }
+
+      .signup-wrapper {
+        justify-content: center;
+      }
+    }
+  </style>
 </head>
+
 <body>
 
-  <h2>Create Investment Account</h2>
+<div class="signup-wrapper">
 
-  <input type="text" id="name" placeholder="Full Name"><br><br>
-  <input type="email" id="email" placeholder="Email"><br><br>
-  <input type="password" id="password" placeholder="Password"><br><br>
+  <!-- LEFT SIDE -->
+  <div class="signup-left">
+    <div class="brand">
+      <h1>FintechPro</h1>
+      <p>Build wealth with confidence.</p>
+    </div>
 
-  <button onclick="signup()">Sign Up</button>
+    <div class="features">
+      <div>✔ Secure account protection</div>
+      <div>✔ Real-time investment tracking</div>
+      <div>✔ Advanced financial tools</div>
+    </div>
+  </div>
+
+  <!-- RIGHT SIDE -->
+  <div class="signup-right">
+    <div class="signup-card">
+      <h2>Create Investment Account</h2>
+
+      <input type="text" id="name" placeholder="Full Name">
+      <input type="email" id="email" placeholder="Email">
+
+      <div class="password-wrapper">
+        <input type="password" id="password" placeholder="Password">
+        <span onclick="togglePassword()">👁</span>
+      </div>
+
+      <button onclick="signup()">Sign Up</button>
+
+      <p class="footer-text">
+        Your data is encrypted and securely stored
+      </p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function togglePassword() {
+  const input = document.getElementById("password");
+  input.type = input.type === "password" ? "text" : "password";
+}
+</script>
 
 </body>
 </html>
