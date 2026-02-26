@@ -170,7 +170,7 @@
     }, 16);
   }
 
-  function loadChart(balance) {
+  function updateChart(balanceHistory) {
     const ctx = document.getElementById("growthChart");
 
     if (chart) chart.destroy();
@@ -178,17 +178,9 @@
     chart = new Chart(ctx, {
       type: "line",
       data: {
-        labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+        labels: balanceHistory.map((_, i) => "T" + (i + 1)),
         datasets: [{
-          label: "Portfolio",
-          data: [
-            balance * 0.4,
-            balance * 0.55,
-            balance * 0.7,
-            balance * 0.8,
-            balance * 0.9,
-            balance
-          ],
+          data: balanceHistory,
           borderColor: "#00ff88",
           backgroundColor: "rgba(0,255,136,0.15)",
           fill: true,
@@ -222,12 +214,62 @@
       } else {
         const liveBalance = docSnap.data().balance || 0;
         animateBalance(liveBalance);
-        loadChart(liveBalance);
       }
     });
 
-    loadHistory();
+    trackRealHistory();
   });
+
+  function trackRealHistory() {
+    let balanceHistory = [];
+    let runningBalance = 0;
+
+    const depositQuery = query(
+      collection(db, "deposits"),
+      where("email", "==", currentUser.email)
+    );
+
+    onSnapshot(depositQuery, (snapshot) => {
+      balanceHistory = [];
+      runningBalance = 0;
+      historyDiv.innerHTML = "";
+
+      snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+
+        if (data.status === "Approved") {
+          runningBalance += Number(data.amount);
+          balanceHistory.push(runningBalance);
+        }
+
+        historyDiv.innerHTML += 
+          `<div class="history-item">Deposit: $${data.amount} (${data.status})</div>`;
+      });
+
+      updateChart(balanceHistory);
+    });
+
+    const withdrawQuery = query(
+      collection(db, "withdrawals"),
+      where("email", "==", currentUser.email)
+    );
+
+    onSnapshot(withdrawQuery, (snapshot) => {
+      snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+
+        if (data.status === "Approved") {
+          runningBalance -= Number(data.amount);
+          balanceHistory.push(runningBalance);
+        }
+
+        historyDiv.innerHTML += 
+          `<div class="history-item">Withdraw: $${data.amount} (${data.status})</div>`;
+      });
+
+      updateChart(balanceHistory);
+    });
+  }
 
   window.makeDeposit = async function() {
     const amount = Number(document.getElementById("depositAmount").value);
@@ -250,37 +292,6 @@
       status: "Pending"
     });
   };
-
-  function loadHistory() {
-    historyDiv.innerHTML = "";
-
-    const depositQuery = query(
-      collection(db, "deposits"),
-      where("email", "==", currentUser.email)
-    );
-
-    onSnapshot(depositQuery, (snapshot) => {
-      historyDiv.innerHTML = "";
-      snapshot.forEach(docSnap => {
-        const data = docSnap.data();
-        historyDiv.innerHTML += 
-          `<div class="history-item">Deposit: $${data.amount} (${data.status})</div>`;
-      });
-    });
-
-    const withdrawQuery = query(
-      collection(db, "withdrawals"),
-      where("email", "==", currentUser.email)
-    );
-
-    onSnapshot(withdrawQuery, (snapshot) => {
-      snapshot.forEach(docSnap => {
-        const data = docSnap.data();
-        historyDiv.innerHTML += 
-          `<div class="history-item">Withdraw: $${data.amount} (${data.status})</div>`;
-      });
-    });
-  }
 
   window.logout = function() {
     signOut(auth).then(() => {
