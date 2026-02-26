@@ -6,7 +6,12 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { 
+      getFirestore, 
+      collection, 
+      addDoc, 
+      serverTimestamp 
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDmUL2bFsNdyBbTWMrnY-yaKI8hAWqLynI",
@@ -22,6 +27,7 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
+    // Protect page
     onAuthStateChanged(auth, (user) => {
       if (!user) {
         window.location.href = "index.html";
@@ -44,18 +50,39 @@
         return;
       }
 
-      await addDoc(collection(db, "withdrawals"), {
-        uid: user.uid,
-        email: user.email,
-        amount: Number(amount),
-        crypto: crypto,
-        walletAddress: wallet,
-        status: "Pending",
-        createdAt: serverTimestamp()
-      });
+      try {
 
-      alert("Withdrawal request submitted successfully!");
-      window.location.href = "dashboard.html";
+        // 1️⃣ Save to withdrawals collection (admin control)
+        await addDoc(collection(db, "withdrawals"), {
+          uid: user.uid,
+          email: user.email,
+          amount: Number(amount),
+          crypto: crypto,
+          walletAddress: wallet,
+          status: "Pending",
+          type: "Withdrawal",
+          createdAt: serverTimestamp()
+        });
+
+        // 2️⃣ ALSO save to transactions collection (for dashboard history)
+        await addDoc(collection(db, "transactions"), {
+          uid: user.uid,
+          email: user.email,
+          amount: Number(amount),
+          crypto: crypto,
+          walletAddress: wallet,
+          status: "Pending",
+          type: "Withdrawal",
+          createdAt: serverTimestamp()
+        });
+
+        alert("Withdrawal request submitted successfully!");
+        window.location.href = "dashboard.html";
+
+      } catch (error) {
+        console.error("Error submitting withdrawal:", error);
+        alert("Something went wrong. Please try again.");
+      }
     };
   </script>
 
@@ -114,6 +141,5 @@
 
     <button onclick="submitWithdrawal()">Submit Withdrawal</button>
   </div>
-
 </body>
 </html>
