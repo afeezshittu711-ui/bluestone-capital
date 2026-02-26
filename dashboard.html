@@ -97,12 +97,22 @@
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { 
-  getFirestore, collection, query, where, getDocs 
+  getAuth, 
+  onAuthStateChanged, 
+  signOut, 
+  setPersistence, 
+  browserLocalPersistence 
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { 
+  getFirestore, 
+  collection, 
+  query, 
+  where, 
+  getDocs 
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-/* ✅ YOUR REAL FIREBASE CONFIG ALREADY INSERTED */
+/* YOUR REAL FIREBASE CONFIG */
 const firebaseConfig = {
   apiKey: "AIzaSyDmUL2bFsNdyBbTWMrnY-yaKI8hAWqLynI",
   authDomain: "real-estate-investment-360d2.firebaseapp.com",
@@ -117,48 +127,24 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+/* FORCE SESSION PERSISTENCE */
+await setPersistence(auth, browserLocalPersistence);
+
 const userEmail = document.getElementById("userEmail");
 const balanceEl = document.getElementById("balance");
 const historyDiv = document.getElementById("history");
 
 let chart;
 
-function formatDate(timestamp) {
-  if (!timestamp) return "";
-  return timestamp.toDate().toLocaleDateString();
-}
-
-function updateChart(labels, dataPoints) {
-  const ctx = document.getElementById("growthChart");
-
-  if (chart) chart.destroy();
-
-  chart = new Chart(ctx, {
-    type: "line",
-    data: {
-      labels: labels,
-      datasets: [{
-        data: dataPoints,
-        borderColor: "#00ff88",
-        backgroundColor: "rgba(0,255,136,0.15)",
-        fill: true,
-        tension: 0.45,
-        pointRadius: 3
-      }]
-    },
-    options: {
-      plugins: { legend: { display: false }},
-      scales: {
-        x: { ticks: { color: "#aaa" }},
-        y: { ticks: { color: "#aaa" }}
-      }
-    }
-  });
-}
-
+/* SAFE AUTH CHECK (no instant logout glitch) */
 onAuthStateChanged(auth, async (user) => {
+
   if (!user) {
-    window.location.href = "index.html";
+    setTimeout(() => {
+      if (!auth.currentUser) {
+        window.location.href = "index.html";
+      }
+    }, 1200);
     return;
   }
 
@@ -216,7 +202,7 @@ onAuthStateChanged(auth, async (user) => {
       runningBalance -= tx.amount;
     }
 
-    labels.push(formatDate(tx.date));
+    labels.push(tx.date.toDate().toLocaleDateString());
     dataPoints.push(runningBalance);
 
     historyDiv.innerHTML += `
@@ -227,7 +213,32 @@ onAuthStateChanged(auth, async (user) => {
   });
 
   balanceEl.textContent = runningBalance.toFixed(2);
-  updateChart(labels, dataPoints);
+
+  const ctx = document.getElementById("growthChart");
+
+  if (chart) chart.destroy();
+
+  chart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: labels,
+      datasets: [{
+        data: dataPoints,
+        borderColor: "#00ff88",
+        backgroundColor: "rgba(0,255,136,0.15)",
+        fill: true,
+        tension: 0.4
+      }]
+    },
+    options: {
+      plugins: { legend: { display: false }},
+      scales: {
+        x: { ticks: { color: "#aaa" }},
+        y: { ticks: { color: "#aaa" }}
+      }
+    }
+  });
+
 });
 
 window.logout = function() {
