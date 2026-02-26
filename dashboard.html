@@ -12,6 +12,64 @@
       margin: 0;
       padding: 0;
       font-family: 'Inter', sans-serif;
+      /* === FINTECH POLISH ADDITIONS (SAFE) === */
+
+/* Smooth transitions */
+button, .stat-card, .transaction-item, .balance-card {
+  transition: all 0.25s ease;
+}
+
+/* Hover lift effect */
+.stat-card:hover,
+.transactions-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 25px rgba(0,0,0,0.25);
+}
+
+/* Button micro interaction */
+.deposit-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(16,185,129,0.4);
+}
+
+.withdraw-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(239,68,68,0.4);
+}
+
+.logout-btn:hover {
+  opacity: 0.85;
+}
+
+/* Glass style upgrade */
+.stat-card,
+.transactions-card {
+  backdrop-filter: blur(8px);
+  background: rgba(30,41,59,0.85);
+}
+
+/* Transaction hover highlight */
+.transaction-item:hover {
+  background: rgba(255,255,255,0.04);
+  padding-left: 6px;
+  border-radius: 6px;
+}
+
+/* Balance animation */
+.balance-card {
+  animation: fadeSlide 0.6s ease forwards;
+}
+
+@keyframes fadeSlide {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
     }
 
     body {
