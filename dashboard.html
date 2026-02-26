@@ -118,6 +118,7 @@
       background: #1e293b;
       border-radius: 16px;
       padding: 20px;
+      margin-bottom: 30px;
     }
 
     .transactions-card h2 {
@@ -147,6 +148,55 @@
       font-weight: 600;
     }
 
+    /* ✅ NEW PROFESSIONAL INVESTMENT SECTION STYLES (ADDED ONLY) */
+
+    .investment-card {
+      background: linear-gradient(135deg, #1e293b, #0f172a);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 30px;
+      box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+    }
+
+    .investment-card h2 {
+      margin-bottom: 15px;
+      font-size: 16px;
+    }
+
+    .investment-card input {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      border: none;
+      margin-bottom: 15px;
+      font-size: 14px;
+    }
+
+    .invest-btn, .claim-btn {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 10px;
+    }
+
+    .invest-btn {
+      background: #2563eb;
+      color: white;
+    }
+
+    .claim-btn {
+      background: #10b981;
+      color: white;
+    }
+
+    .claim-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
     @media(max-width: 600px) {
       .stats {
         flex-direction: column;
@@ -170,7 +220,7 @@
 
   <div class="balance-card">
     <h2>Available Balance</h2>
-    <div class="amount">$10,000</div>
+    <div class="amount" id="liveBalance">$10,000</div>
   </div>
 
   <div class="stats">
@@ -193,6 +243,30 @@
     </button>
   </div>
 
+  <!-- ✅ NEW PROFESSIONAL INVESTMENT SECTION (ADDED ONLY) -->
+
+  <div class="investment-card">
+    <h2>3-Month Investment Plan</h2>
+    <p style="opacity:0.7;margin-bottom:10px;">
+      Invest / Deposit $amount in 3 months to claim 150% return
+    </p>
+
+    <input type="number" id="investmentAmount" placeholder="Minimum $1,000">
+
+    <p style="margin-bottom:10px;">
+      Claim After 3 Months: <strong id="returnPreview">$0</strong>
+    </p>
+
+    <button class="invest-btn" onclick="startInvestment()">Invest Now</button>
+
+    <div id="activeInvestmentBox" style="display:none;margin-top:15px;">
+      <p>Maturity Status: <strong id="maturityStatus"></strong></p>
+      <button class="claim-btn" id="claimBtn" onclick="claimInvestment()" disabled>
+        Claim Investment
+      </button>
+    </div>
+  </div>
+
   <div class="transactions-card">
     <h2>Recent Transactions</h2>
     <div id="transactionsList">
@@ -205,10 +279,9 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-  import { getFirestore, collection, query, where, orderBy, onSnapshot } 
+  import { getFirestore, collection, query, where, orderBy, onSnapshot, doc, getDoc, setDoc, updateDoc }
   from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-  // ✅ YOUR ORIGINAL WORKING CONFIG RESTORED
   const firebaseConfig = {
     apiKey: "AIzaSyDmUL2bFsNdyBbTWMrnY-yaKI8hAWqLynI",
     authDomain: "real-estate-investment-360d2.firebaseapp.com",
@@ -223,13 +296,36 @@
   const auth = getAuth(app);
   const db = getFirestore(app);
 
-  const transactionsList = document.getElementById("transactionsList");
-  const transactionCount = document.getElementById("transactionCount");
+  const ROI = 0.5; // 50% return
+  const DURATION_MONTHS = 3;
 
-  onAuthStateChanged(auth, (user) => {
+  const investmentInput = document.getElementById("investmentAmount");
+  const returnPreview = document.getElementById("returnPreview");
+
+  investmentInput.addEventListener("input", () => {
+    const val = parseFloat(investmentInput.value) || 0;
+    const total = val + (val * ROI);
+    returnPreview.textContent = "$" + total.toLocaleString();
+  });
+
+  onAuthStateChanged(auth, async (user) => {
     if (!user) {
       window.location.href = "login.html";
       return;
+    }
+
+    // ✅ LIVE BALANCE LOAD
+    const userDoc = await getDoc(doc(db, "users", user.uid));
+    if (userDoc.exists()) {
+      const balance = userDoc.data().balance || 0;
+      document.getElementById("liveBalance").textContent =
+        "$" + balance.toLocaleString();
+    }
+
+    // ✅ LOAD INVESTMENT IF EXISTS
+    const invDoc = await getDoc(doc(db, "investments", user.uid));
+    if (invDoc.exists()) {
+      showInvestment(invDoc.data());
     }
 
     const q = query(
@@ -269,6 +365,78 @@
       });
     });
   });
+
+  async function startInvestment() {
+    const user = auth.currentUser;
+    const amount = parseFloat(investmentInput.value);
+
+    if (!amount || amount < 1000) {
+      alert("Minimum investment is $1,000");
+      return;
+    }
+
+    const maturity = new Date();
+    maturity.setMonth(maturity.getMonth() + DURATION_MONTHS);
+
+    await setDoc(doc(db, "investments", user.uid), {
+      amount,
+      totalReturn: amount + (amount * ROI),
+      maturityDate: maturity,
+      claimed: false
+    });
+
+    showInvestment({
+      amount,
+      totalReturn: amount + (amount * ROI),
+      maturityDate: maturity,
+      claimed: false
+    });
+  }
+
+  function showInvestment(data) {
+    document.getElementById("activeInvestmentBox").style.display = "block";
+    const maturity = new Date(data.maturityDate);
+    const claimBtn = document.getElementById("claimBtn");
+
+    const interval = setInterval(() => {
+      const diff = maturity - new Date();
+      if (diff <= 0 && !data.claimed) {
+        document.getElementById("maturityStatus").textContent = "Matured";
+        claimBtn.disabled = false;
+        clearInterval(interval);
+      } else {
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        document.getElementById("maturityStatus").textContent =
+          days + " days remaining";
+      }
+    }, 1000);
+  }
+
+  async function claimInvestment() {
+    const user = auth.currentUser;
+    const invRef = doc(db, "investments", user.uid);
+    const invDoc = await getDoc(invRef);
+
+    if (!invDoc.exists()) return;
+
+    const inv = invDoc.data();
+    if (inv.claimed) return;
+
+    const userRef = doc(db, "users", user.uid);
+    const userSnap = await getDoc(userRef);
+    const currentBalance = userSnap.data().balance || 0;
+
+    await updateDoc(userRef, {
+      balance: currentBalance + inv.totalReturn
+    });
+
+    await updateDoc(invRef, {
+      claimed: true
+    });
+
+    alert("Investment claimed successfully!");
+    location.reload();
+  }
 
   window.logout = function () {
     signOut(auth).then(() => {
