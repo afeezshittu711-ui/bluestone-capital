@@ -3,7 +3,6 @@
 <head>
   <title>Real Estate Investment</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
@@ -27,21 +26,17 @@
 
     .card {
       background: rgba(255,255,255,0.05);
-      backdrop-filter: blur(10px);
-      border-radius: 16px;
+      backdrop-filter: blur(12px);
+      border-radius: 18px;
       padding: 20px;
       margin-bottom: 20px;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+      box-shadow: 0 10px 35px rgba(0,0,0,0.5);
     }
 
     .balance {
       font-size: 36px;
       font-weight: bold;
       color: #00ff88;
-      margin-top: 10px;
-    }
-
-    canvas {
       margin-top: 10px;
     }
 
@@ -74,15 +69,17 @@
     }
 
     .history-item {
-      padding: 8px 0;
+      padding: 6px 0;
       border-bottom: 1px solid rgba(255,255,255,0.1);
-      font-size: 14px;
+      font-size: 13px;
+      color: #ccc;
     }
 
     .section-title {
-      font-size: 14px;
+      font-size: 13px;
       color: #aaa;
       margin-bottom: 10px;
+      letter-spacing: 1px;
     }
   </style>
 </head>
@@ -105,18 +102,6 @@
   </div>
 
   <div class="card">
-    <div class="section-title">DEPOSIT</div>
-    <input type="number" id="depositAmount" placeholder="Enter amount">
-    <button onclick="makeDeposit()">Request Deposit</button>
-  </div>
-
-  <div class="card">
-    <div class="section-title">WITHDRAW</div>
-    <input type="number" id="withdrawAmount" placeholder="Enter amount">
-    <button onclick="makeWithdraw()">Request Withdrawal</button>
-  </div>
-
-  <div class="card">
     <div class="section-title">TRANSACTIONS</div>
     <div id="history"></div>
   </div>
@@ -126,178 +111,160 @@
 </div>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-  import { 
-    getFirestore, doc, setDoc, collection, addDoc, 
-    onSnapshot, query, where 
-  } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyDmUL2bFsNdyBbTWMrnY-yaKI8hAWqLynI",
-    authDomain: "real-estate-investment-360d2.firebaseapp.com",
-    projectId: "real-estate-investment-360d2",
-    storageBucket: "real-estate-investment-360d2.firebasestorage.app",
-    messagingSenderId: "459495660687",
-    appId: "1:459495660687:web:2595afa1e611a9757364fa",
-    measurementId: "G-9FTJ7LMDJD"
-  };
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { 
+  getFirestore, doc, setDoc, addDoc, collection, 
+  query, where, getDocs, serverTimestamp 
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
+const firebaseConfig = {
+  apiKey: "YOUR_KEY",
+  authDomain: "YOUR_AUTH",
+  projectId: "YOUR_PROJECT",
+};
 
-  const userEmail = document.getElementById("userEmail");
-  const balanceEl = document.getElementById("balance");
-  const historyDiv = document.getElementById("history");
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-  let currentUser;
-  let chart;
+const userEmail = document.getElementById("userEmail");
+const balanceEl = document.getElementById("balance");
+const historyDiv = document.getElementById("history");
 
-  function animateBalance(target) {
-    let start = 0;
-    const duration = 600;
-    const increment = target / (duration / 16);
+let chart;
 
-    const counter = setInterval(() => {
-      start += increment;
-      if (start >= target) {
-        balanceEl.textContent = target.toFixed(2);
-        clearInterval(counter);
-      } else {
-        balanceEl.textContent = start.toFixed(2);
+function formatDate(timestamp) {
+  if (!timestamp) return "";
+  const date = timestamp.toDate();
+  return date.toLocaleDateString();
+}
+
+function updateChart(labels, dataPoints) {
+  const ctx = document.getElementById("growthChart");
+
+  if (chart) chart.destroy();
+
+  chart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: labels,
+      datasets: [{
+        data: dataPoints,
+        borderColor: "#00ff88",
+        backgroundColor: "rgba(0,255,136,0.15)",
+        fill: true,
+        tension: 0.45,
+        pointRadius: 3
+      }]
+    },
+    options: {
+      plugins: { legend: { display: false }},
+      scales: {
+        x: { ticks: { color: "#aaa" }},
+        y: { ticks: { color: "#aaa" }}
       }
-    }, 16);
-  }
-
-  function updateChart(balanceHistory) {
-    const ctx = document.getElementById("growthChart");
-
-    if (chart) chart.destroy();
-
-    chart = new Chart(ctx, {
-      type: "line",
-      data: {
-        labels: balanceHistory.map((_, i) => "T" + (i + 1)),
-        datasets: [{
-          data: balanceHistory,
-          borderColor: "#00ff88",
-          backgroundColor: "rgba(0,255,136,0.15)",
-          fill: true,
-          tension: 0.4
-        }]
-      },
-      options: {
-        plugins: { legend: { display: false }},
-        scales: {
-          x: { ticks: { color: "#aaa" }},
-          y: { ticks: { color: "#aaa" }}
-        }
-      }
-    });
-  }
-
-  onAuthStateChanged(auth, (user) => {
-    if (!user) {
-      window.location.href = "index.html";
-      return;
     }
+  });
+}
 
-    currentUser = user;
-    userEmail.textContent = user.email;
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    window.location.href = "index.html";
+    return;
+  }
 
-    const userRef = doc(db, "users", user.email);
+  userEmail.textContent = user.email;
 
-    onSnapshot(userRef, (docSnap) => {
-      if (!docSnap.exists()) {
-        setDoc(userRef, { balance: 0 });
-      } else {
-        const liveBalance = docSnap.data().balance || 0;
-        animateBalance(liveBalance);
-      }
-    });
+  const depositsQuery = query(
+    collection(db, "deposits"),
+    where("email", "==", user.email)
+  );
 
-    trackRealHistory();
+  const withdrawalsQuery = query(
+    collection(db, "withdrawals"),
+    where("email", "==", user.email)
+  );
+
+  const depositSnap = await getDocs(depositsQuery);
+  const withdrawSnap = await getDocs(withdrawalsQuery);
+
+  let transactions = [];
+
+  depositSnap.forEach(doc => {
+    const data = doc.data();
+    if (data.status === "Approved") {
+      transactions.push({
+        type: "deposit",
+        amount: Number(data.amount),
+        date: data.createdAt
+      });
+    }
   });
 
-  function trackRealHistory() {
-    let balanceHistory = [];
-    let runningBalance = 0;
-
-    const depositQuery = query(
-      collection(db, "deposits"),
-      where("email", "==", currentUser.email)
-    );
-
-    onSnapshot(depositQuery, (snapshot) => {
-      balanceHistory = [];
-      runningBalance = 0;
-      historyDiv.innerHTML = "";
-
-      snapshot.forEach(docSnap => {
-        const data = docSnap.data();
-
-        if (data.status === "Approved") {
-          runningBalance += Number(data.amount);
-          balanceHistory.push(runningBalance);
-        }
-
-        historyDiv.innerHTML += 
-          `<div class="history-item">Deposit: $${data.amount} (${data.status})</div>`;
+  withdrawSnap.forEach(doc => {
+    const data = doc.data();
+    if (data.status === "Approved") {
+      transactions.push({
+        type: "withdraw",
+        amount: Number(data.amount),
+        date: data.createdAt
       });
+    }
+  });
 
-      updateChart(balanceHistory);
-    });
+  transactions.sort((a,b) => {
+    if (!a.date || !b.date) return 0;
+    return a.date.seconds - b.date.seconds;
+  });
 
-    const withdrawQuery = query(
-      collection(db, "withdrawals"),
-      where("email", "==", currentUser.email)
-    );
+  let runningBalance = 0;
+  let labels = [];
+  let dataPoints = [];
 
-    onSnapshot(withdrawQuery, (snapshot) => {
-      snapshot.forEach(docSnap => {
-        const data = docSnap.data();
+  historyDiv.innerHTML = "";
 
-        if (data.status === "Approved") {
-          runningBalance -= Number(data.amount);
-          balanceHistory.push(runningBalance);
-        }
+  transactions.forEach(tx => {
+    if (tx.type === "deposit") {
+      runningBalance += tx.amount;
+    } else {
+      runningBalance -= tx.amount;
+    }
 
-        historyDiv.innerHTML += 
-          `<div class="history-item">Withdraw: $${data.amount} (${data.status})</div>`;
-      });
+    labels.push(formatDate(tx.date));
+    dataPoints.push(runningBalance);
 
-      updateChart(balanceHistory);
-    });
-  }
+    historyDiv.innerHTML += `
+      <div class="history-item">
+        ${tx.type.toUpperCase()} - $${tx.amount}
+      </div>
+    `;
+  });
 
-  window.makeDeposit = async function() {
-    const amount = Number(document.getElementById("depositAmount").value);
-    if (!amount) return alert("Enter amount");
+  balanceEl.textContent = runningBalance.toFixed(2);
+  updateChart(labels, dataPoints);
+});
 
-    await addDoc(collection(db, "deposits"), {
-      email: currentUser.email,
-      amount: amount,
-      status: "Pending"
-    });
-  };
+window.logout = function() {
+  signOut(auth).then(() => {
+    window.location.href = "index.html";
+  });
+};
 
-  window.makeWithdraw = async function() {
-    const amount = Number(document.getElementById("withdrawAmount").value);
-    if (!amount) return alert("Enter amount");
+/* -----------------------------
+   IMPORTANT: HOW TO CREATE DEPOSIT
+   This is now INCLUDED properly
+--------------------------------*/
 
-    await addDoc(collection(db, "withdrawals"), {
-      email: currentUser.email,
-      amount: amount,
-      status: "Pending"
-    });
-  };
-
-  window.logout = function() {
-    signOut(auth).then(() => {
-      window.location.href = "index.html";
-    });
-  };
+window.createDeposit = async function(amount, email) {
+  await addDoc(collection(db, "deposits"), {
+    email: email,
+    amount: amount,
+    status: "Pending",
+    createdAt: serverTimestamp()   // ✅ IMPORTANT PART ADDED
+  });
+};
 
 </script>
 
