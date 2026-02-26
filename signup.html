@@ -54,19 +54,6 @@
       opacity: 0.9;
     }
 
-    .google-btn {
-      background: white;
-      color: black;
-      border: 1px solid #ddd;
-    }
-
-    .divider {
-      text-align: center;
-      margin: 20px 0;
-      font-size: 13px;
-      color: #777;
-    }
-
     .footer {
       text-align: center;
       font-size: 13px;
@@ -88,12 +75,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { 
       getAuth, 
-      createUserWithEmailAndPassword,
-      GoogleAuthProvider,
-      signInWithRedirect,
-      getRedirectResult,
-      RecaptchaVerifier,
-      signInWithPhoneNumber
+      createUserWithEmailAndPassword 
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
     import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -111,7 +93,7 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // EMAIL SIGNUP (ORIGINAL — SAFE)
+    // EMAIL SIGNUP
     window.signup = async function () {
       const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
@@ -135,73 +117,6 @@
         alert(error.message);
       }
     };
-
-    // GOOGLE SIGNUP (FIXED FOR IPHONE SAFARI USING REDIRECT)
-    const provider = new GoogleAuthProvider();
-
-    window.googleSignup = async function () {
-      await signInWithRedirect(auth, provider);
-    };
-
-    getRedirectResult(auth)
-      .then(async (result) => {
-        if (result) {
-          const user = result.user;
-
-          await setDoc(doc(db, "users", user.uid), {
-            fullName: user.displayName,
-            email: user.email,
-            balance: 0,
-            createdAt: new Date(),
-            provider: "google"
-          }, { merge: true });
-
-          showSuccess();
-        }
-      })
-      .catch((error) => {
-        console.error(error);
-      });
-
-    // PHONE OTP VERIFICATION (+1 DEFAULT)
-    window.sendOTP = async function () {
-      const phoneNumber = document.getElementById("phone").value;
-
-      window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-        size: 'invisible'
-      });
-
-      const appVerifier = window.recaptchaVerifier;
-
-      try {
-        const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, appVerifier);
-        window.confirmationResult = confirmationResult;
-        alert("OTP Sent!");
-      } catch (error) {
-        alert(error.message);
-      }
-    };
-
-    window.verifyOTP = async function () {
-      const code = document.getElementById("otp").value;
-
-      try {
-        const result = await window.confirmationResult.confirm(code);
-        const user = result.user;
-
-        await setDoc(doc(db, "users", user.uid), {
-          phone: user.phoneNumber,
-          balance: 0,
-          createdAt: new Date(),
-          provider: "phone"
-        }, { merge: true });
-
-        showSuccess();
-
-      } catch (error) {
-        alert("Invalid OTP");
-      }
-    };
   </script>
 </head>
 
@@ -213,22 +128,8 @@
     <input type="text" id="name" placeholder="Full Name">
     <input type="email" id="email" placeholder="Email">
     <input type="password" id="password" placeholder="Password">
+
     <button onclick="signup()">Create Account</button>
-
-    <div class="divider">OR</div>
-
-    <button class="google-btn" onclick="googleSignup()">Continue with Google</button>
-
-    <div class="divider">Phone Verification</div>
-
-    <!-- CHANGED TO +1 -->
-    <input type="text" id="phone" placeholder="+1XXXXXXXXXX">
-    <button onclick="sendOTP()">Send OTP</button>
-
-    <input type="text" id="otp" placeholder="Enter OTP">
-    <button onclick="verifyOTP()">Verify OTP</button>
-
-    <div id="recaptcha-container"></div>
 
     <div class="footer">
       Already have an account? <a href="login.html">Login</a>
