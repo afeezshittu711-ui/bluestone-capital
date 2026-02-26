@@ -20,7 +20,6 @@
 
     h1 {
       text-align: center;
-      font-weight: 600;
       margin-bottom: 30px;
     }
 
@@ -51,10 +50,6 @@
       color: white;
     }
 
-    input::placeholder {
-      color: #aaa;
-    }
-
     button {
       width: 100%;
       padding: 12px;
@@ -64,11 +59,6 @@
       color: black;
       font-weight: bold;
       cursor: pointer;
-      transition: 0.2s ease;
-    }
-
-    button:hover {
-      transform: scale(1.03);
     }
 
     .logout {
@@ -127,8 +117,10 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-  import { getFirestore, doc, getDoc, setDoc, collection, addDoc, getDocs } 
-  from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+  import { 
+    getFirestore, doc, setDoc, collection, addDoc, 
+    onSnapshot, query, where 
+  } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyDmUL2bFsNdyBbTWMrnY-yaKI8hAWqLynI",
@@ -152,7 +144,7 @@
 
   function animateBalance(target) {
     let start = 0;
-    const duration = 1000;
+    const duration = 600;
     const increment = target / (duration / 16);
 
     const counter = setInterval(() => {
@@ -176,17 +168,36 @@
     userEmail.textContent = user.email;
 
     const userRef = doc(db, "users", user.email);
-    const userSnap = await getDoc(userRef);
 
-    if (!userSnap.exists()) {
-      await setDoc(userRef, { balance: 0 });
-      animateBalance(0);
-    } else {
-      const realBalance = userSnap.data().balance || 0;
-      animateBalance(realBalance);
-    }
+    // 🔥 REAL-TIME BALANCE LISTENER
+    onSnapshot(userRef, (docSnap) => {
+      if (!docSnap.exists()) {
+        setDoc(userRef, { balance: 0 });
+      } else {
+        const liveBalance = docSnap.data().balance || 0;
+        animateBalance(liveBalance);
+      }
+    });
 
-    loadHistory();
+    // 🔥 REAL-TIME DEPOSITS
+    const depositQuery = query(
+      collection(db, "deposits"),
+      where("email", "==", user.email)
+    );
+
+    onSnapshot(depositQuery, (snapshot) => {
+      loadHistory(snapshot.docs);
+    });
+
+    // 🔥 REAL-TIME WITHDRAWALS
+    const withdrawQuery = query(
+      collection(db, "withdrawals"),
+      where("email", "==", user.email)
+    );
+
+    onSnapshot(withdrawQuery, (snapshot) => {
+      loadHistory();
+    });
   });
 
   window.makeDeposit = async function() {
@@ -198,9 +209,6 @@
       amount: amount,
       status: "Pending"
     });
-
-    alert("Deposit request sent!");
-    loadHistory();
   };
 
   window.makeWithdraw = async function() {
@@ -212,28 +220,36 @@
       amount: amount,
       status: "Pending"
     });
-
-    alert("Withdrawal request sent!");
-    loadHistory();
   };
 
-  async function loadHistory() {
+  function loadHistory() {
     historyDiv.innerHTML = "";
 
-    const deposits = await getDocs(collection(db, "deposits"));
-    deposits.forEach(docSnap => {
-      const data = docSnap.data();
-      if (data.email === currentUser.email) {
-        historyDiv.innerHTML += `<div class="history-item">Deposit: $${data.amount} (${data.status})</div>`;
-      }
+    const depositQuery = query(
+      collection(db, "deposits"),
+      where("email", "==", currentUser.email)
+    );
+
+    onSnapshot(depositQuery, (snapshot) => {
+      historyDiv.innerHTML = "";
+      snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        historyDiv.innerHTML += 
+          `<div class="history-item">Deposit: $${data.amount} (${data.status})</div>`;
+      });
     });
 
-    const withdrawals = await getDocs(collection(db, "withdrawals"));
-    withdrawals.forEach(docSnap => {
-      const data = docSnap.data();
-      if (data.email === currentUser.email) {
-        historyDiv.innerHTML += `<div class="history-item">Withdraw: $${data.amount} (${data.status})</div>`;
-      }
+    const withdrawQuery = query(
+      collection(db, "withdrawals"),
+      where("email", "==", currentUser.email)
+    );
+
+    onSnapshot(withdrawQuery, (snapshot) => {
+      snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        historyDiv.innerHTML += 
+          `<div class="history-item">Withdraw: $${data.amount} (${data.status})</div>`;
+      });
     });
   }
 
