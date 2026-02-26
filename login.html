@@ -2,6 +2,10 @@
 <html>
 <head>
   <title>Login</title>
+
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -9,7 +13,7 @@
     const firebaseConfig = {
       apiKey: "AIzaSyDmUL2bFsNdyBbTWMrnY-yaKI8hAWqLynI",
       authDomain: "real-estate-investment-360d2.firebaseapp.com",
-      projectId: "real-estate-investment-360d2",
+      projectId: "real-estate-investment-360d2.firebaseapp.com",
       storageBucket: "real-estate-investment-360d2.firebasestorage.app",
       messagingSenderId: "459495660687",
       appId: "1:459495660687:web:c99b6738f0644d9c7364fa",
@@ -32,15 +36,215 @@
       }
     }
   </script>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', sans-serif;
+    }
+
+    body {
+      height: 100vh;
+      background: linear-gradient(-45deg, #0f172a, #1e293b, #0f172a);
+      background-size: 400% 400%;
+      animation: gradientMove 12s ease infinite;
+    }
+
+    @keyframes gradientMove {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .login-wrapper {
+      display: flex;
+      height: 100vh;
+    }
+
+    /* LEFT PANEL */
+    .login-left {
+      flex: 1;
+      color: white;
+      padding: 60px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .brand h1 {
+      font-size: 42px;
+      margin-bottom: 10px;
+    }
+
+    .brand p {
+      opacity: 0.8;
+      margin-bottom: 40px;
+    }
+
+    .features div {
+      margin-bottom: 15px;
+      font-size: 15px;
+      opacity: 0.85;
+    }
+
+    /* RIGHT PANEL */
+    .login-right {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .login-card {
+      width: 380px;
+      padding: 40px;
+      background: rgba(30,41,59,0.85);
+      backdrop-filter: blur(14px);
+      border-radius: 18px;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.4);
+      animation: fadeUp 0.6s ease forwards;
+    }
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(25px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .login-card h2 {
+      color: white;
+      margin-bottom: 30px;
+      text-align: center;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 18px;
+      border-radius: 8px;
+      border: none;
+      background: #0f172a;
+      color: white;
+      font-size: 14px;
+    }
+
+    input::placeholder {
+      color: #94a3b8;
+    }
+
+    .password-wrapper {
+      position: relative;
+    }
+
+    .password-wrapper span {
+      position: absolute;
+      right: 12px;
+      top: 12px;
+      cursor: pointer;
+    }
+
+    .remember {
+      margin-bottom: 20px;
+      font-size: 14px;
+      color: #cbd5e1;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: none;
+      background: #2563eb;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.3s ease;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(37,99,235,0.4);
+    }
+
+    .footer-text {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 12px;
+      opacity: 0.6;
+      color: #cbd5e1;
+    }
+
+    @media(max-width: 900px) {
+      .login-left {
+        display: none;
+      }
+
+      .login-wrapper {
+        justify-content: center;
+      }
+    }
+  </style>
 </head>
+
 <body>
 
-  <h2>Login to Your Account</h2>
+<div class="login-wrapper">
 
-  <input type="email" id="email" placeholder="Email"><br><br>
-  <input type="password" id="password" placeholder="Password"><br><br>
+  <!-- LEFT SIDE -->
+  <div class="login-left">
+    <div class="brand">
+      <h1>FintechPro</h1>
+      <p>Smart investing. Secure growth.</p>
+    </div>
 
-  <button onclick="login()">Login</button>
+    <div class="features">
+      <div>✔ Real-time portfolio tracking</div>
+      <div>✔ Secure crypto transactions</div>
+      <div>✔ Advanced financial analytics</div>
+    </div>
+  </div>
+
+  <!-- RIGHT SIDE -->
+  <div class="login-right">
+    <div class="login-card">
+      <h2>Login to Your Account</h2>
+
+      <input type="email" id="email" placeholder="Email">
+      
+      <div class="password-wrapper">
+        <input type="password" id="password" placeholder="Password">
+        <span onclick="togglePassword()">👁</span>
+      </div>
+
+      <div class="remember">
+        <label>
+          <input type="checkbox"> Remember me
+        </label>
+      </div>
+
+      <button onclick="login()">Login</button>
+
+      <p class="footer-text">
+        Secure login powered by encrypted authentication
+      </p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function togglePassword() {
+  const input = document.getElementById("password");
+  input.type = input.type === "password" ? "text" : "password";
+}
+</script>
 
 </body>
 </html>
