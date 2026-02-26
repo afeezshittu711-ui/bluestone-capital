@@ -93,6 +93,39 @@
       signInWithPopup,
       RecaptchaVerifier,
       signInWithPhoneNumber
+      import { 
+  GoogleAuthProvider,
+  signInWithRedirect,
+  getRedirectResult
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+const provider = new GoogleAuthProvider();
+
+window.googleSignup = async function () {
+  await signInWithRedirect(auth, provider);
+};
+
+// Handle redirect result after Google login
+getRedirectResult(auth)
+  .then(async (result) => {
+    if (result) {
+      const user = result.user;
+
+      await setDoc(doc(db, "users", user.uid), {
+        fullName: user.displayName,
+        email: user.email,
+        balance: 0,
+        createdAt: new Date(),
+        provider: "google"
+      }, { merge: true });
+
+      showSuccess();
+    }
+  })
+  .catch((error) => {
+    console.error(error);
+    alert(error.message);
+  });
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
     import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
